@@ -530,6 +530,87 @@
         .invisible {
             opacity: 0;
         }
+
+        .feedback {
+            margin-top: 14px;
+            padding: 14px;
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02));
+            border: 1px solid rgba(255, 255, 255, .10);
+            box-shadow: 0 16px 50px rgba(0, 0, 0, .22);
+        }
+
+        .feedback-title {
+            margin: 0 0 6px 0;
+            font-weight: 750;
+            letter-spacing: .2px;
+            font-size: 14.5px;
+            color: rgba(244, 247, 255, .92);
+        }
+
+        .feedback-sub {
+            margin: 0 0 10px 0;
+            color: rgba(244, 247, 255, .72);
+            font-size: 13.5px;
+            line-height: 1.45;
+        }
+
+        .field {
+            display: grid;
+            gap: 8px;
+        }
+
+        .input {
+            width: 100%;
+            appearance: none;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, .14);
+            background: rgba(255, 255, 255, .06);
+            color: var(--text);
+            padding: 12px 12px;
+            outline: none;
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .12);
+        }
+
+        .input::placeholder {
+            color: rgba(244, 247, 255, .55);
+        }
+
+        .input:focus {
+            border-color: rgba(255, 211, 122, .55);
+            box-shadow: 0 0 0 4px rgba(255, 211, 122, .18), inset 0 0 0 1px rgba(0, 0, 0, .12);
+        }
+
+        .input.invalid {
+            border-color: rgba(255, 59, 88, .70);
+            box-shadow: 0 0 0 4px rgba(255, 59, 88, .18), inset 0 0 0 1px rgba(0, 0, 0, .12);
+        }
+
+        .feedback-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .feedback .send {
+            width: 100%;
+        }
+
+        .status {
+            margin-top: 10px;
+            font-size: 13px;
+            color: rgba(244, 247, 255, .72);
+            min-height: 18px;
+        }
+
+        .status.ok {
+            color: rgba(42, 211, 154, .95);
+        }
+
+        .status.err {
+            color: rgba(255, 59, 88, .95);
+        }
     </style>
 </head>
 
@@ -550,7 +631,7 @@
                 <div class="content">
                     <h1>Привіт, Каміло!</h1>
                     <p class="sub">
-                        Ти хотіла щось цікаве... Треба <b>відчинити двері</b>. Готова? 
+                        Ти хотіла щось цікаве... Треба <b>відчинити двері</b>. Готова?
                     </p>
                 </div>
 
@@ -595,8 +676,9 @@
                             коли за вікном тихенько падає сніг, а всередині - спокій.
                         </p>
                         <p>
-                            А допоможуть з цим прості герої затишку:
-                            <b>чашка</b>, <b>носочки</b>, <b>какао з маршмелоу</b> і <b>пряничні чоловічки</b> (так, я їх спік сам)! 🙂
+                            А створити відповідну атмосферу допоможуть:
+                            <b>чашка</b>, <b>носочки</b>, <b>какао з маршмелоу</b> і <b>пряничні чоловічки</b> (так, я
+                            їх спік сам)! 🙂
                         </p>
                         <p>
                             Нехай у твоєму грудні буде більше “вау”, більше посмішок і трішки магії щодня ✨
@@ -610,7 +692,7 @@
 
                     <div class="visuals" aria-label="Новорічні візуали">
                         <div class="viz-card">
-                            <div class="viz-pad">
+                            <div>
                                 <figure class="hero-figure"
                                     aria-label="Какао, маршмелоу, пряничний чоловічок і носочки">
                                     <img class="hero-img" src="assets/holiday-vibe.png"
@@ -619,12 +701,25 @@
                                 </figure>
                             </div>
                         </div>
+                        <div class="feedback" aria-label="Форма зворотного звʼязку">
+                            <p class="feedback-title">Маєш що сказати своєму Санті?</p>
 
+                            <form id="feedbackForm" class="field" novalidate>
+                                <!-- ВАЖЛИВО: name має бути entry.<...> з твоєї Google форми -->
+                                <input class="input" type="text" id="feedbackMessage" name="entry.1382008214"
+                                    placeholder="Напиши кілька слів" autocomplete="off" required />
+
+                                <div class="feedback-row">
+                                    <button class="send" id="feedbackSend" type="submit"
+                                        aria-label="Надіслати фідбек">📨 Надіслати</button>
+                                    <div id="feedbackStatus" class="status" aria-live="polite"></div>
+                                </div>
+                            </form>
+                        </div>
                         <div class="btns">
                             <button id="replay" type="button" aria-label="Повернутися до дверей">🔁 Відкрити ще
                                 раз</button>
                         </div>
-
                         <div class="hint" style="margin-top:10px;">Нехай цей маленький сайт принесе тобі тепло ☕🎄</div>
                     </div>
                 </div>
@@ -660,6 +755,66 @@
             const knobRight = document.getElementById('knob2');
             const replay = document.getElementById('replay');
 
+            // --- Feedback (Google Forms) ---
+            const feedbackForm = document.getElementById('feedbackForm');
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            const feedbackStatus = document.getElementById('feedbackStatus');
+
+            const FORM_ID = "1FAIpQLSfZbyUWArlFIPpQSfTlFe3SCLngY-0olya1jWLt8QXjWVwwJg"; // <-- твій
+            const FEEDBACK_URL = `https://docs.google.com/forms/d/e/${FORM_ID}/formResponse`;
+
+            function setStatus(text, kind) {
+                feedbackStatus.textContent = text || "";
+                feedbackStatus.classList.remove('ok', 'err');
+                if (kind) feedbackStatus.classList.add(kind);
+            }
+
+            function validateFeedback() {
+                const value = (feedbackMessage.value || "").trim();
+                const ok = value.length > 0;
+                feedbackMessage.classList.toggle('invalid', !ok);
+                if (!ok) setStatus("Напиши хоча б слово 🙂", "err");
+                else setStatus("", null);
+                return ok;
+            }
+
+            feedbackMessage.addEventListener('input', () => {
+                // прибираємо помилку як тільки людина щось ввела
+                if (feedbackMessage.classList.contains('invalid')) validateFeedback();
+            });
+
+            feedbackForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                if (!validateFeedback()) return;
+
+                const formData = new FormData(feedbackForm);
+
+                // Маленький UX: блокуємо повторні сабміти на час відправки
+                const btn = document.getElementById('feedbackSend');
+                const prevText = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = "Відправляю…";
+                setStatus("Надсилаю…", null);
+
+                fetch(FEEDBACK_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: formData
+                })
+                    .then(() => {
+                        setStatus("Дякую! Повідомлення отримано ✨", "ok");
+                        feedbackForm.reset();
+                        feedbackMessage.classList.remove('invalid');
+                    })
+                    .catch((err) => {
+                        console.error(err);
+                        setStatus("Ой… не вийшло відправити. Спробуй ще раз", "err");
+                    })
+                    .finally(() => {
+                        btn.disabled = false;
+                        btn.textContent = prevText;
+                    });
+            });
             let busy = false;
 
             function openDoor() {
